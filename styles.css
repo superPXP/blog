@@ -129,6 +129,17 @@ footer p {
     text-align: center;
 }
 
+.admin-link {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.admin-link:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     nav .container {
