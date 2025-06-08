@@ -10,15 +10,11 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname)));
 
 // 确保数据目录存在
-const DATA_DIR = path.join(__dirname, 'data');
-const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
+const POSTS_FILE = process.cwd() + '/data/posts.json';
 
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR);
-}
-
+// 确保数据文件存在（已提交到Git仓库）
 if (!fs.existsSync(POSTS_FILE)) {
-    fs.writeFileSync(POSTS_FILE, JSON.stringify([]));
+    throw new Error('data/posts.json 文件不存在，请确保已提交到Git仓库');
 }
 
 // 获取所有文章，支持搜索和分类过滤
@@ -128,9 +124,11 @@ app.post('/api/posts', (req, res) => {
     }
 });
 
-// 创建文章页面
+// 创建文章页面（Vercel环境下禁用）
 function createPostPage(post) {
-    const postDir = path.join(__dirname, 'post');
+    console.log('Vercel环境：文章页面应预先生成并提交到Git仓库');
+    /* 禁用文件写入
+    const postDir = process.cwd() + '/post';
     
     if (!fs.existsSync(postDir)) {
         fs.mkdirSync(postDir);
@@ -281,12 +279,13 @@ function createPostPage(post) {
 
 // 处理单篇文章的路由
 app.get('/post/:id', (req, res) => {
-    const postPath = path.join(__dirname, 'post', req.params.id, 'index.html');
+    const postPath = process.cwd() + '/post/' + req.params.id + '/index.html';
+    const notFoundPath = process.cwd() + '/404.html';
     
     if (fs.existsSync(postPath)) {
         res.sendFile(postPath);
     } else {
-        res.status(404).sendFile(path.join(__dirname, '404.html'));
+        res.status(404).sendFile(notFoundPath);
     }
 });
 
