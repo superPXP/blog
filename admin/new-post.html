@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布新文章</title>
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/marked/marked.min.js" as="script">
+
+    <!-- 仅加载必要的Bootstrap组件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        #editor-container {
+            margin-top: 20px;
+            min-height: 400px; /* 预留编辑器空间，防止加载时页面跳动 */
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+        }
+        .preview {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn-publish {
+            margin-top: 20px;
+        }
+        .alert {
+            display: none;
+            margin-top: 20px;
+        }
+        /* 加载状态样式 */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 编辑器加载时的占位样式 */
+        .editor-placeholder {
+            padding: 20px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>发布新文章</h1>
+        <div class="mb-3">
+            <label for="title" class="form-label">文章标题</label>
+            <input type="text" class="form-control" id="title" placeholder="请输入文章标题">
+        </div>
+        <div id="editor-container">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载编辑器...</p>
+            </div>
+            <textarea id="editor" style="display: none;"></textarea>
+        </div>
+        <button class="btn btn-primary btn-publish" onclick="publishArticle()" disabled>发布文章</button>
+        <div class="alert alert-success" role="alert" id="success-alert">
+            文章发布成功！
+        </div>
+        <div class="alert alert-danger" role="alert" id="error-alert">
+            发布失败，请重试。
+        </div>
+    </div>
+
+    <!-- 延迟加载编辑器样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" media="print" onload="this.media='all'">
+
+    <script>
+        // 动态加载编辑器
+        let easyMDE = null;
+
+        // 使用Promise管理资源加载
+        const loadScript = (src) => {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            });
+        };
+
+        // 初始化编辑器
+        const initEditor = async () => {
+            try {
+                // 并行加载所需的脚本
+                await Promise.all([
+                    loadScript('https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js'),
+                    loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js')
+                ]);
+
+                // 初始化编辑器
+                easyMDE = new EasyMDE({
+                    element: document.getElementById('editor'),
+                    spellChecker: false,
+                    autofocus: true,
+                    placeholder: '在这里用Markdown写下你的文章...',
+                    toolbar: ['bold', 'italic', 'heading', '|', 
+                             'quote', 'code', 'unordered-list', 'ordered-list', '|',
+                             'link', 'image', '|', 
+                             'preview', 'side-by-side', 'fullscreen', '|',
+                             'guide'],
+                    initialValue: localStorage.getItem('draft') || '', // 恢复草稿
+                });
+
+                // 自动保存草稿
+                easyMDE.codemirror.on('change', () => {
+                    localStorage.setItem('draft', easyMDE.value());
+                });
+
+                // 隐藏加载状态，显示编辑器
+                document.querySelector('.loading').style.display = 'none';
+                document.getElementById('editor').style.display = 'block';
+                document.querySelector('.btn-publish').disabled = false;
+
+            } catch (error) {
+                console.error('编辑器加载失败:', error);
+                document.querySelector('.loading').innerHTML = `
+                    <p>编辑器加载失败，请刷新页面重试。</p>
+                    <button class="btn btn-primary mt-3" onclick="location.reload()">重新加载</button>
+                `;
+            }
+        };
+
+        // 发布文章
+        async function publishArticle() {
+            if (!easyMDE) {
+                alert('编辑器尚未加载完成，请稍候...');
+                return;
+            }
+
+            const title = document.getElementById('title').value.trim();
+            const content = easyMDE.value();
+            const successAlert = document.getElementById('success-alert');
+            const errorAlert = document.getElementById('error-alert');
+            const publishButton = document.querySelector('.btn-publish');
+
+            if (!title || !content) {
+                errorAlert.textContent = '标题和内容不能为空！';
+                errorAlert.style.display = 'block';
+                successAlert.style.display = 'none';
+                return;
+            }
+
+            // 禁用发布按钮，显示加载状态
+            publishButton.disabled = true;
+            publishButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 发布中...';
+
+            try {
+                // 使用marked将Markdown转换为HTML
+                const htmlContent = marked.parse(content);
+                
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        htmlContent,
+                        date: new Date(),
+                        readTime: Math.ceil(content.length / 500) // 估算阅读时间
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 清除草稿
+                    localStorage.removeItem('draft');
+                    
+                    successAlert.style.display = 'block';
+                    errorAlert.style.display = 'none';
+                    
+                    // 3秒后跳转到文章页面
+                    setTimeout(() => {
+                        window.location.href = result.path;
+                    }, 3000);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                errorAlert.textContent = `发布失败：${error.message}`;
+                errorAlert.style.display = 'block';
+                successAlert.style.display = 'none';
+                
+                // 恢复发布按钮状态
+                publishButton.disabled = false;
+                publishButton.textContent = '发布文章';
+            }
+        }
+
+        // 页面加载完成后初始化编辑器
+        document.addEventListener('DOMContentLoaded', initEditor);
+    </script>
+</body>
+</html>

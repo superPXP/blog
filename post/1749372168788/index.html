@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hello world - 我的博客</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .post-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .post-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .post-title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .post-meta {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .post-content {
+            line-height: 1.8;
+        }
+        .post-content h1, .post-content h2, .post-content h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .post-content p {
+            margin-bottom: 1rem;
+        }
+        .post-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 1rem 0;
+        }
+        .post-content pre {
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .post-content blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 1rem;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="container">
+                <h1>我的博客</h1>
+                <ul>
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/admin/new-post.html" class="publish-btn">发布文章</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <article class="post-container">
+            <header class="post-header">
+                <h1 class="post-title">hello world</h1>
+                <div class="post-meta">
+                    <span>2025/6/8</span>
+                    <span>·</span>
+                    <span>1分钟阅读</span>
+                </div>
+            </header>
+            <div class="post-content">
+                <h1>hello world</h1>
+
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 我的博客. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - 页面未找到</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .error-container {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .error-code {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+        }
+        
+        .back-home {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: #3498db;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .back-home:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="container">
+                <h1>我的博客</h1>
+                <ul>
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/admin/new-post.html" class="publish-btn">发布文章</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="error-container">
+            <div class="error-code">404</div>
+            <h2 class="error-message">抱歉，页面未找到</h2>
+            <p>你访问的页面可能已被移除或暂时不可用。</p>
+            <p style="margin: 2rem 0;">
+                <a href="/" class="back-home">返回首页</a>
+            </p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 我的博客. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

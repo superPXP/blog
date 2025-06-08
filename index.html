@@ -3,52 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的个人博客</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>我的博客</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <header>
         <nav>
             <div class="container">
-                <h1>我的博客</h1>
-                <ul>
-                    <li><a href="index.html">首页</a></li>
-                    <li><a href="#posts">文章</a></li>
-                    <li><a href="#about">关于</a></li>
-                </ul>
+                <h1><i class="fas fa-book-reader"></i> 我的博客</h1>
+                <div class="nav-right">
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="搜索文章...">
+                        <button id="search-btn"><i class="fas fa-search"></i></button>
+                    </div>
+                    <ul>
+                        <li><a href="/" class="active"><i class="fas fa-home"></i> 首页</a></li>
+                        <li><a href="/admin/new-post.html" class="publish-btn"><i class="fas fa-pen"></i> 发布文章</a></li>
+                    </ul>
+                </div>
             </div>
         </nav>
     </header>
 
-    <main>
-        <div class="container">
-            <section class="intro">
-                <h2>欢迎来到我的博客</h2>
-                <p>这里是我分享想法和经验的地方。</p>
-            </section>
-
-            <section id="posts" class="posts">
-                <h2>最新文章</h2>
-                <div class="post-grid">
-                    <article class="post-card">
-                        <h3><a href="posts/hello-world.html">你好，世界！</a></h3>
-                        <div class="post-meta">发布于 2024-01-20</div>
-                        <p>这是我的第一篇博客文章，让我们开始这段旅程吧...</p>
-                    </article>
+    <main class="container">
+        <div class="content-wrapper">
+            <aside class="sidebar">
+                <div class="categories">
+                    <h3><i class="fas fa-tags"></i> 文章分类</h3>
+                    <ul id="categories-list">
+                        <!-- 分类将通过JavaScript动态加载 -->
+                    </ul>
                 </div>
-            </section>
+            </aside>
 
-            <section id="about" class="about">
-                <h2>关于我</h2>
-                <p>你好！我是一名热爱技术和写作的博主。通过这个博客，我希望能够分享我的经验和想法。</p>
+            <section class="main-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-newspaper"></i> 最新文章</h2>
+                    <div class="view-options">
+                        <button id="grid-view" class="active"><i class="fas fa-th-large"></i></button>
+                        <button id="list-view"><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+
+                <div class="post-grid" id="posts-container">
+                    <!-- 文章将通过JavaScript动态加载 -->
+                </div>
+
+                <div id="error-container" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="error-message"></span>
+                    <button id="retry-button" class="retry-btn">
+                        <i class="fas fa-redo"></i> 重试
+                    </button>
+                </div>
             </section>
         </div>
     </main>
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 我的博客. All rights reserved.</p>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4><i class="fas fa-info-circle"></i> 关于博客</h4>
+                    <p>分享技术、生活和有趣的故事</p>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-envelope"></i> 联系方式</h4>
+                    <p>Email: your.email@example.com</p>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-share-alt"></i> 社交媒体</h4>
+                    <div class="social-links">
+                        <a href="#" title="GitHub"></a><i class="fab fa-github"></i></a>
+                        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 我的博客. All rights reserved.</p>
+            </div>
         </div>
     </footer>
+
+    <script>
+        // 工具函数：防抖
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 状态管理
+        const state = {
+            posts: [],
+            currentCategory: null,
+            searchTerm: '',
+            loading: false,
+            error: null
+        };
+
+        // DOM元素
+        const elements = {
+            loading: document.getElementById('loading'),
+            postsContainer: document.getElementById('posts-container'),
+            errorContainer: document.getElementById('error-container'),
+            errorMessage: document.getElementById('error-message'),
+            retryButton: document.getElementById('retry-button'),
+            searchInput: document.getElementById('search-input'),
+            searchBtn: document.getElementById('search-btn'),
+            categoriesList: document.getElementById('categories-list'),
+            gridView: document.getElementById('grid-view'),
+            listView: document.getElementById('list-view')
+        };
+
+        // 显示/隐藏加载状态
+        function setLoading(isLoading) {
+            state.loading = isLoading;
+            elements.loading.style.display = isLoading ? 'flex' : 'none';
+            elements.postsContainer.style.display = isLoading ? 'none' : 'grid';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            state.error = message;
+            elements.errorMessage.textContent = message;
+            elements.errorContainer.style.display = 'flex';
+            elements.postsContainer.style.display = 'none';
+        }
+
+        // 隐藏错误信息
+        function hideError() {
+            state.error = null;
+            elements.errorContainer.style.display = 'none';
+            elements.postsContainer.style.display = 'grid';
+        }
+
+        // 获取文章列表
+        async function fetchPosts() {
+            setLoading(true);
+            hideError();
+
+            try {
+                let url = '/api/posts';
+                const params = new URLSearchParams();
+                
+                if (state.searchTerm) {
+                    params.append('search', state.searchTerm);
+                }
+                if (state.currentCategory) {
+                    params.append('category', state.currentCategory);
+                }
+
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('服务器响应错误');
+                }
+
+                state.posts = await response.json();
+                renderPosts();
+                if (!state.currentCategory) {
+                    updateCategories();
+                }
+            } catch (error) {
+                console.error('加载文章失败:', error);
+                showError('加载文章时出错，请重试。');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // 渲染文章列表
+        function renderPosts() {
+            if (state.posts.length === 0) {
+                elements.postsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>${state.searchTerm || state.currentCategory ? 
+                            '没有找到匹配的文章' : 
+                            '还没有发布任何文章。点击"发布文章"来创建第一篇文章！'}</p>
+                    </div>`;
+                return;
+            }
+
+            elements.postsContainer.innerHTML = state.posts.map(post => `
+                <article class="post-card">
+                    <div class="post-card-content">
+                        <h3><a href="/post/${post.id}">${highlightText(post.title, state.searchTerm)}</a></h3>
+                        <div class="post-meta">
+                            <span><i class="far fa-calendar"></i> ${new Date(post.date).toLocaleDateString()}</span>
+                            <span><i class="far fa-clock"></i> ${post.readTime}分钟阅读</span>
+                            ${post.category ? `
+                                <span class="category-tag" data-category="${post.category}">
+                                    <i class="fas fa-tag"></i> ${post.category}
+                                </span>` : ''}
+                        </div>
+                        <p class="post-excerpt">${highlightText(post.content.substring(0, 150), state.searchTerm)}...</p>
+                        <div class="post-footer">
+                            <a href="/post/${post.id}" class="read-more">阅读全文 <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        // 高亮搜索关键词
+        function highlightText(text, searchTerm) {
+            if (!searchTerm) return text;
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        // 更新分类列表
+        async function updateCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                if (!response.ok) throw new Error('获取分类失败');
+                
+                const categories = await response.json();
+                
+                if (categories.length === 0) {
+                    elements.categoriesList.innerHTML = '<li class="empty-categories">暂无分类</li>';
+                    return;
+                }
+
+                elements.categoriesList.innerHTML = `
+                    <li>
+                        <a href="#" class="category-link ${!state.currentCategory ? 'active' : ''}" data-category="">
+                            <i class="fas fa-th-list"></i> 全部文章
+                        </a>
+                    </li>
+                    ${categories.map(category => `
+                        <li>
+                            <a href="#" class="category-link ${state.currentCategory === category ? 'active' : ''}" 
+                               data-category="${category}">
+                                <i class="fas fa-tag"></i> ${category}
+                            </a>
+                        </li>
+                    `).join('')}`;
+            } catch (error) {
+                console.error('获取分类失败:', error);
+                elements.categoriesList.innerHTML = '<li class="empty-categories">加载分类失败</li>';
+            }
+        }
+
+        // 搜索处理函数
+        const handleSearch = debounce(() => {
+            state.searchTerm = elements.searchInput.value.trim();
+            fetchPosts();
+        }, 300);
+
+        // 事件监听器
+        elements.searchInput.addEventListener('input', handleSearch);
+        elements.searchBtn.addEventListener('click', handleSearch);
+
+        elements.retryButton.addEventListener('click', fetchPosts);
+
+        elements.categoriesList.addEventListener('click', (e) => {
+            e.preventDefault();
+            const categoryLink = e.target.closest('.category-link');
+            if (categoryLink) {
+                state.currentCategory = categoryLink.dataset.category;
+                // 更新分类链接的激活状态
+                document.querySelectorAll('.category-link').forEach(link => {
+                    link.classList.toggle('active', link === categoryLink);
+                });
+                fetchPosts();
+            }
+        });
+
+        // 视图切换
+        elements.gridView.addEventListener('click', () => {
+            elements.postsContainer.className = 'post-grid';
+            elements.gridView.classList.add('active');
+            elements.listView.classList.remove('active');
+        });
+        
+        elements.listView.addEventListener('click', () => {
+            elements.postsContainer.className = 'post-list';
+            elements.listView.classList.add('active');
+            elements.gridView.classList.remove('active');
+        });
+
+        // 页面加载时获取文章列表
+        window.addEventListener('load', fetchPosts);
+    </script>
 </body>
 </html>
