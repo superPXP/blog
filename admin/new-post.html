@@ -151,6 +151,23 @@
             }
         };
 
+        // 检查是否在Vercel环境中
+        async function checkVercelEnvironment() {
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ test: true })
+                });
+                const result = await response.json();
+                return result.message && result.message.includes('Vercel');
+            } catch (error) {
+                return false;
+            }
+        }
+
         // 发布文章
         async function publishArticle() {
             if (!easyMDE) {
@@ -166,6 +183,21 @@
 
             if (!title || !content) {
                 errorAlert.textContent = '标题和内容不能为空！';
+                errorAlert.style.display = 'block';
+                successAlert.style.display = 'none';
+                return;
+            }
+
+            // 检查是否在Vercel环境中
+            const isVercel = await checkVercelEnvironment();
+            if (isVercel) {
+                errorAlert.innerHTML = `
+                    <strong>注意：</strong> 在Vercel环境中不支持发布新文章。<br>
+                    请在本地开发环境中添加文章，然后提交到Git仓库。<br>
+                    <a href="https://github.com/你的用户名/你的仓库名/blob/main/DEPLOY_GUIDE.md" target="_blank">
+                        查看部署指南了解更多信息
+                    </a>
+                `;
                 errorAlert.style.display = 'block';
                 successAlert.style.display = 'none';
                 return;
@@ -210,7 +242,11 @@
                     throw new Error(result.message);
                 }
             } catch (error) {
-                errorAlert.textContent = `发布失败：${error.message}`;
+                let errorMessage = error.message;
+                if (error.message.includes('Vercel')) {
+                    errorMessage = '在Vercel环境中不支持发布新文章。请在本地开发环境中添加文章，然后提交到Git仓库。';
+                }
+                errorAlert.textContent = `发布失败：${errorMessage}`;
                 errorAlert.style.display = 'block';
                 successAlert.style.display = 'none';
                 
